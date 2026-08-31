@@ -13,6 +13,19 @@ DISK_CRIT="${DISK_CRIT:-90}"
 DNS_TEST_HOST="${DNS_TEST_HOST:-redhat.com}"
 SERVICE_TO_CHECK="${SERVICE_TO_CHECK:-sshd}"
 
+CHECK_TYPE="${CHECK_TYPE:-healthcheck}"
+
+HOST_SHORT=$(hostname -s)
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+REPORT_DIR="${PROJECT_DIR}/reports"
+REPORT_FILE="${REPORT_DIR}/${HOST_SHORT}_${TIMESTAMP}_${CHECK_TYPE}.txt"
+
+mkdir -p "$REPORT_DIR"
+
 OVERALL_STATUS=0
 
 echo "=========================================="
