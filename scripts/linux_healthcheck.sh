@@ -112,6 +112,23 @@ done < <(
 )
 
 echo ""
+echo "Network Information:"
+
+echo "Interfaces:"
+ip -br addr
+
+echo ""
+echo "Default Gateway:"
+
+DEFAULT_GATEWAY=$(ip route | awk '/default/ {print $3; exit}')
+
+if [ -n "$DEFAULT_GATEWAY" ]; then
+    echo "$DEFAULT_GATEWAY"
+else
+    echo "No default gateway found"
+fi
+
+echo ""
 echo "=========================================="
 echo " OVERALL HEALTH"
 echo "=========================================="
