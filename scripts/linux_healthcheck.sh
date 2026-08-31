@@ -10,6 +10,9 @@ MEM_CRIT="${MEM_CRIT:-90}"
 DISK_WARN="${DISK_WARN:-80}"
 DISK_CRIT="${DISK_CRIT:-90}"
 
+DNS_TEST_HOST="${DNS_TEST_HOST:-redhat.com}"
+SERVICE_TO_CHECK="${SERVICE_TO_CHECK:-sshd}"
+
 OVERALL_STATUS=0
 
 echo "=========================================="
@@ -110,6 +113,88 @@ done < <(
         -x efivarfs \
         | awk 'NR > 1 {print $5, $6}'
 )
+
+echo ""
+echo "Network Information:"
+
+echo "Interfaces:"
+ip -br addr
+
+echo ""
+echo "Default Gateway:"
+
+DEFAULT_GATEWAY=$(ip route | awk '/default/ {print $3; exit}')
+
+if [ -n "$DEFAULT_GATEWAY" ]; then
+    echo "$DEFAULT_GATEWAY"
+else
+    echo "No default gateway found"
+fi
+
+echo ""
+echo "Gateway Reachability:"
+
+if [ -z "$DEFAULT_GATEWAY" ]; then
+
+    echo "Status: CRITICAL - No default gateway found"
+    OVERALL_STATUS=2
+
+elif ping -c 2 -W 2 "$DEFAULT_GATEWAY" > /dev/null 2>&1; then
+
+    echo "$DEFAULT_GATEWAY - OK"
+
+else
+
+    echo "$DEFAULT_GATEWAY - CRITICAL - Unreachable"
+    OVERALL_STATUS=2
+
+fi
+
+echo ""
+echo "DNS Resolution:"
+
+if getent hosts "$DNS_TEST_HOST" > /dev/null 2>&1; then
+
+    echo "$DNS_TEST_HOST - OK"
+
+else
+
+    echo "$DNS_TEST_HOST - CRITICAL - Resolution failed"
+    OVERALL_STATUS=2
+
+fi
+
+echo ""
+echo "Service Health:"
+
+if systemctl is-active --quiet "$SERVICE_TO_CHECK"; then
+
+    echo "$SERVICE_TO_CHECK - OK"
+
+else
+
+    echo "$SERVICE_TO_CHECK - CRITICAL"
+    OVERALL_STATUS=2
+
+fi
+
+echo ""
+echo "Failed Systemd Units:"
+
+FAILED_UNITS=$(systemctl --failed --no-legend --plain 2>/dev/null \
+    | awk 'NF {count++} END {print count+0}')
+
+echo "Failed units: $FAILED_UNITS"
+
+if [ "$FAILED_UNITS" -gt 0 ]; then
+
+    systemctl --failed --no-pager
+
+    if [ "$OVERALL_STATUS" -lt 1 ]; then
+        OVERALL_STATUS=1
+    fi
+
+fi
 
 echo ""
 echo "=========================================="
