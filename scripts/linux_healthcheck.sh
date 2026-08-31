@@ -4,11 +4,11 @@
 # Author: Tanaka Kambasha
 
 # Health thresholds
-MEM_WARN=80
-MEM_CRIT=90
+MEM_WARN="${MEM_WARN:-80}"
+MEM_CRIT="${MEM_CRIT:-90}"
 
-DISK_WARN=80
-DISK_CRIT=90
+DISK_WARN="${DISK_WARN:-80}"
+DISK_CRIT="${DISK_CRIT:-90}"
 
 OVERALL_STATUS=0
 
