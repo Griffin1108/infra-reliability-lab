@@ -26,6 +26,8 @@ REPORT_FILE="${REPORT_DIR}/${HOST_SHORT}_${TIMESTAMP}_${CHECK_TYPE}.txt"
 
 mkdir -p "$REPORT_DIR"
 
+exec > >(tee "$REPORT_FILE") 2>&1
+
 OVERALL_STATUS=0
 
 echo "=========================================="
@@ -229,5 +231,9 @@ case "$OVERALL_STATUS" in
         ;;
 
 esac
+
+echo ""
+echo "Report saved to:"
+echo "$REPORT_FILE"
 
 exit "$OVERALL_STATUS"
